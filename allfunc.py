@@ -48,7 +48,7 @@ def loadmap(filename):
         (Hb_blr_br,amp_Hb_blr_br) = (Hb2_blr_br,amp_Hb2_blr_br)
     return Hb_blr_br,OIII_br,OIII_nr,amp_Hb_blr_br,amp_OIII_br,amp_OIII_nr
 
-def flux_data_and_error(obj,x1,y1,destination_path_cube="/home/mainak/Downloads/Outflow_paper1/MUSE"):
+def flux_data_and_error(obj,x1,y1,destination_path_cube="/home/rickeythecat/Downloads/Outflow_paper1/MUSE"):
     hdu = fits.open('%s/%s/Systematic Error/x%sy%s_artificial_fluxmap_%s.fits'%(destination_path_cube,obj,x1,y1,obj))
     (OIII_nr,OIII_br,Hb1_blr_br,Hb2_blr_br) = (hdu[2].data,hdu[3].data,hdu[5].data,hdu[6].data)
     (amp_Hb1_blr_br,amp_Hb2_blr_br) = (np.max(Hb1_blr_br),np.max(Hb2_blr_br))
@@ -302,7 +302,6 @@ def full_gauss2(p,wave,data,error):
     cont = (wave/1000.0)*m+c
     return (narrow_OIII+broad_OIII+Hb_broad1+Hb_broad2+cont-data)/error
 
-
 def full_gauss2_lsq(p,wave,data,error):
     (amp_Hb,amp_OIII5007,vel_OIII,vel_sigma_OIII,amp_Hb_br,amp_OIII5007_br,vel_OIII_br,vel_sigma_OIII_br,amp_Hb1,amp_Fe5018_1,vel_Hb1,vel_sigma_Hb1,amp_Hb2,amp_Fe5018_2,vel_Hb2,vel_sigma_Hb2,m,c)=p
     narrow_OIII = Hb_O3_gauss_model(wave,amp_Hb,amp_OIII5007,vel_OIII,vel_sigma_OIII)
@@ -320,17 +319,6 @@ def full_gauss2_model(p,wave):
     Hb_broad2 = Hb_Fe_doublet_gauss(wave,amp_Hb2,amp_Fe5018_2,vel_Hb2,vel_sigma_Hb2) 
     cont = (wave/1000.0)*m+c
     return (narrow_OIII+broad_OIII+Hb_broad1+Hb_broad2+cont)
-
-def full_gauss3(p,wave,data,error):
-    (amp_Hb,amp_OIII5007,vel_OIII,vel_sigma_OIII,amp_Hb_br,amp_OIII5007_br,vel_OIII_br,vel_sigma_OIII_br,amp_Hb1,amp_Fe5018_1,vel_Hb1,vel_sigma_Hb1,amp_Hb2,amp_Fe5018_2,vel_Hb2,vel_sigma_Hb2,amp_Hb3,amp_Fe5018_3,vel_Hb3,vel_sigma_Hb3,m,c)=p
-    narrow_OIII = Hb_O3_gauss(wave,amp_Hb,amp_OIII5007,vel_OIII,vel_sigma_OIII)
-    broad_OIII = Hb_O3_gauss(wave,amp_Hb_br,amp_OIII5007_br,vel_OIII_br,vel_sigma_OIII_br)
-    Hb_broad1 = Hb_Fe_doublet_gauss(wave,amp_Hb1,amp_Fe5018_1,vel_Hb1,vel_sigma_Hb1) 
-    Hb_broad2 = Hb_Fe_doublet_gauss(wave,amp_Hb2,amp_Fe5018_2,vel_Hb2,vel_sigma_Hb2) 
-    Hb_broad3 = Hb_Fe_doublet_gauss(wave,amp_Hb3,amp_Fe5018_3,vel_Hb3,vel_sigma_Hb3) 
-    cont = (wave/1000.0)*m+c
-    return (narrow_OIII+broad_OIII+Hb_broad1+Hb_broad2+Hb_broad3+cont-data)/error
-
 
 def continuum(wave,m,c):
     slope = (wave/1000.0)*m
@@ -529,7 +517,6 @@ def int_spec(mini_cube,mini_err):
     int_error = np.sqrt(sum((mini_err[:,i,j])**2 for i in range(mini_cube.shape[1]) for j in range(mini_cube.shape[2])))
     return int_spectrum,int_error
 
-
 def SII_fix_par(obj):
     hdu = fits.open('%s_central_fit.fits'%(obj))
     central_tab = hdu[1].data
@@ -614,6 +601,14 @@ def model(amp,x0,y0,A,B,C,alpha,muse_sampling_size):
         y, x = np.mgrid[:7, :7]
     else:
         y, x = np.mgrid[:15, :15] 
+    #p = models.Moffat2D(amp_Hb_blr,x0_Hb_Blr,y0_Hb_Blr,gamma,alpha)
+    psf_data = amp*((1.0+A*(x-x0)**2+B*(y-y0)**2+C*(x-x0)*(y-y0))**(-alpha))
+    amp_psf = np.max(psf_data)
+    psf = (psf_data/amp_psf)
+    return psf
+
+def model_eline(amp,x0,y0,A,B,C,alpha):
+    y, x = np.mgrid[:101, :101] 
     #p = models.Moffat2D(amp_Hb_blr,x0_Hb_Blr,y0_Hb_Blr,gamma,alpha)
     psf_data = amp*((1.0+A*(x-x0)**2+B*(y-y0)**2+C*(x-x0)*(y-y0))**(-alpha))
     amp_psf = np.max(psf_data)
@@ -715,7 +710,7 @@ def arb_sampling_size(wo_cube):
         sampling_size = 0.4
     return sampling_size
 
-def shape(obj,destination_path_cube="/home/mainak/Downloads/Outflow_paper1/MUSE"):
+def shape(obj,destination_path_cube="/home/rickeythecat/Downloads/Outflow_paper1/MUSE"):
     hdu = fits.open('%s/%s/%s.wo_absorption.fits'%(destination_path_cube,obj,obj)) 
     data = hdu[0].data
     single_dimension_shape = np.shape(data)[1] 
@@ -739,7 +734,7 @@ def central_spectrum(wo_wave,popt,z,broad2=False):
     fit = full_gauss(popt,wo_wave[select])
     return fit
     
-def ellip_moffat_par(obj,destination_path_cube="/home/mainak/Downloads/Outflow_paper1/MUSE"):
+def ellip_moffat_par(obj,destination_path_cube="/home/rickeythecat/Downloads/Outflow_paper1/MUSE"):
     hdu = fits.open('%s/%s/9_arcsec_moffat_table_%s.fits'%(destination_path_cube,obj,obj))
     central_tab = hdu[1].data
     central_columns = hdu[1].header
@@ -752,7 +747,7 @@ def ellip_moffat_par(obj,destination_path_cube="/home/mainak/Downloads/Outflow_p
     alpha = central_tab.field('alpha')[0]
     return amp_Hb_blr,x0_Hb_Blr,y0_Hb_Blr,A,B,C,alpha
 
-def moffat_O3_par(obj,destination_path_cube="/home/mainak/Downloads/Outflow_paper1/MUSE"):
+def moffat_O3_par(obj,destination_path_cube="/home/rickeythecat/Downloads/Outflow_paper1/MUSE"):
     hdu = fits.open('%s/%s/9_arcsec_moffat_table_%s.fits'%(destination_path_cube,obj,obj))
     central_tab = hdu[1].data
     central_columns = hdu[1].header
@@ -764,7 +759,7 @@ def moffat_O3_par(obj,destination_path_cube="/home/mainak/Downloads/Outflow_pape
     y0_OIII_nr = central_tab.field('y0_OIII_nr')[0]
     return amp_OIII_br,x0_OIII_br,y0_OIII_br,amp_OIII_nr,x0_OIII_nr,y0_OIII_nr
 
-def full_par_central(obj,destination_path_cube="/home/mainak/Downloads/Outflow_paper1/MUSE"):
+def full_par_central(obj,destination_path_cube="/home/rickeythecat/Downloads/Outflow_paper1/MUSE"):
     hdu = fits.open('%s/%s/%s_central_fit.fits'%(destination_path_cube,obj,obj))
     central_tab = hdu[1].data
     central_columns = hdu[1].header
@@ -783,7 +778,7 @@ def full_par_central(obj,destination_path_cube="/home/mainak/Downloads/Outflow_p
     
     return amp_Hb,amp_OIII5007,vel_OIII,vel_sigma_OIII,amp_Hb_br,amp_OIII5007_br,vel_OIII_br,vel_sigma_OIII_br,amp_Hb1,amp_Fe5018_1,vel_Hb1,vel_sigma_Hb1,amp_Hb2,amp_Fe5018_2,vel_Hb2,vel_sigma_Hb2,m,c
 
-def agn_location(obj,destination_path_cube="/home/mainak/Downloads/Outflow_paper1/MUSE"):
+def agn_location(obj,destination_path_cube="/home/rickeythecat/Downloads/Outflow_paper1/MUSE"):
     hdu = fits.open('%s/%s/%s_AGNpix.fits'%(destination_path_cube,obj,obj))
     central_tab = hdu[1].data
     central_columns = hdu[1].header
