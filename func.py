@@ -293,6 +293,16 @@ def complex_gauss_coupled(p,wave,data,error):
      blr3 = 0
      cont = (wave/1000.0)*m+c
      return (nlr_core++nlr_wing+blr1+blr2+blr3+cont-data)/error
+ 
+def  Type2_gauss_coupled(p,wave,data,error):
+     #(amp_Ha_core1,amp_NII6583_core1,amp_SII6716_core1,amp_SII6731_core1,vel_core1,vel_sigma_core1,amp_Ha_core2,amp_NII6583_core2,amp_SII6716_core2,amp_SII6731_core2,vel_core2,vel_sigma_core2,amp_Ha_wing,amp_NII6583_wing,amp_SII6716_wing,amp_SII6731_wing,vel_wing,vel_sigma_wing,amp_Ha_blr1,vel_blr1,vel_sigma_blr1,amp_Ha_blr2,vel_blr2,vel_sigma_blr2,amp_Ha_blr3,vel_blr3,vel_sigma_blr3,amp_Ha_blr4,vel_blr4,vel_sigma_blr4,m,c)= p
+     (amp_Ha_core,amp_NII6583_core,amp_SII6716_core,amp_SII6731_core,vel_core,vel_sigma_core,amp_Ha_wing,amp_NII6583_wing,amp_SII6716_wing,amp_SII6731_wing,vel_wing,vel_sigma_wing,m,c)= p  
+     nlr_core = nlr_gauss_coupled(wave,amp_Ha_core,amp_NII6583_core,amp_SII6716_core,amp_SII6731_core,vel_core,vel_sigma_core)
+#     nlr_core2 = nlr_gauss(wave,amp_Ha_core2,amp_NII6583_core2,amp_SII6716_core2,amp_SII6731_core2,vel_core2,vel_sigma_core2)
+     nlr_wing = nlr_gauss_coupled(wave,amp_Ha_wing,amp_NII6583_wing,amp_SII6716_wing,amp_SII6731_wing,vel_wing,vel_sigma_wing)
+     #nlr_wing = 0
+     cont = (wave/1000.0)*m+c
+     return (nlr_core++nlr_wing+cont-data)/error
 #============================================================================== 
     
 def complex_gauss_decoupled(p,wave,data,error):
@@ -336,6 +346,7 @@ def vel_sigma_coupled_gauss(p,wave,data,error,fixed_param):
     #blr3 = 0
     cont = (wave/1000.0)*m+c
     return (Ha_NII_core+SII_core+Ha_NII_wing+SII_wing+blr1+blr2+blr3+cont-data)/error
+
     
 def full_gauss_SII(wave,amp_SII6716,amp_SII6731,vel_SII6731,vel_sigma_SII6731,amp_SII6716_br,amp_SII6731_br,vel_SII6731_br,vel_sigma_SII6731_br,m,c):
     narrow_SII = SII_doublet_gauss(wave,amp_SII6716,amp_SII6731,vel_SII6731,vel_sigma_SII6731)
@@ -385,6 +396,23 @@ def full_gauss2(p,wave,data,error):
     cont = (wave/1000.0)*m+c
     #cont = 0
     return (narrow_OIII+broad_OIII+Hb_broad1+Hb_broad2+cont-data)/error
+
+def full_gauss2_eline(p,wave,data,error):
+    (amp_Hb,amp_OIII5007,vel_OIII,vel_sigma_OIII,amp_Hb_br,amp_OIII5007_br,vel_OIII_br,vel_sigma_OIII_br,m,c)=p
+    narrow_OIII = Hb_O3_gauss(wave,amp_Hb,amp_OIII5007,vel_OIII,vel_sigma_OIII)
+    broad_OIII = Hb_O3_gauss(wave,amp_Hb_br,amp_OIII5007_br,vel_OIII_br,vel_sigma_OIII_br)
+    #broad_OIII = 0
+    cont = (wave/1000.0)*m+c
+    #cont = 0
+    return (narrow_OIII+broad_OIII++cont-data)/error
+
+def full_gauss_eline(p,wave,data,error):
+    (amp_Hb,amp_OIII5007,vel_OIII,vel_sigma_OIII,amp_Hb_br,amp_OIII5007_br,vel_OIII_br,vel_sigma_OIII_br,m,c)=p
+    narrow_OIII = Hb_O3_gauss(wave,amp_Hb,amp_OIII5007,vel_OIII,vel_sigma_OIII)
+    broad_OIII = 0
+    cont = (wave/1000.0)*m+c
+    #cont = 0
+    return (narrow_OIII+broad_OIII++cont-data)/error
 
 def full_gauss1NFM(p,wave,data,error):
     (amp_Hb,amp_OIII5007,vel_OIII,vel_sigma_OIII,amp_Hb_br1,amp_OIII5007_br1,vel_OIII_br1,vel_sigma_OIII_br1,amp_Hb1,amp_Fe5018_1,vel_Hb1,vel_sigma_Hb1,amp_Hb2,vel_Hb2,vel_sigma_Hb2,amp_Fe5018_2,vel_Fe5018_2,vel_sigma_Fe5018_2,m,c)=p
@@ -921,7 +949,7 @@ def plot_decoupled_kin(obj,wo_wave,data,error,z,popt_decoupled_fit):
     plt.legend()
     plt.show()     
        
-def agn_location(obj,destination_path_cube="/home/mainak/Downloads/Outflow_paper1/MUSE"):
+def agn_location(obj,destination_path_cube="/home/rickeythecat/Downloads/Outflow_paper1/MUSE"):
     hdu = fits.open('%s/%s/%s_AGNpix.fits'%(destination_path_cube,obj,obj))
     central_tab = hdu[1].data
     central_columns = hdu[1].header
